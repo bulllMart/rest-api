@@ -6,42 +6,45 @@ const NSELive = require('./src/nseLive');
 const app = express();
 const port = process.env.PORT || 3000;
 
-
+// CORS Middleware
 app.use(cors({
-    origin: '*', // Allows all origins
-    methods: ['GET', 'POST', 'PUT'],
-    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+    origin: '*', // Allow all origins (for development; limit in production)
+    methods: ['GET', 'POST', 'PUT'], // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed request headers
 }));
-app.use(express.json()); // For parsing JSON request bodies
 
+// JSON Parsing Middleware
+app.use(express.json());
 
+// Instantiate NSELive class
 const nseLive = new NSELive();
 
 // Route 1: Fetch all indices data
 app.get('/api/allIndices', async (req, res, next) => {
-	try {
-		const data = await nseLive.allIndices();
-		res.json(data);
-	} catch (error) {
-		next(error); // Pass error to error handler
-	}
+    try {
+        const data = await nseLive.allIndices();
+        res.json({ success: true, data });
+    } catch (error) {
+        next(error); // Pass error to global error handler
+    }
 });
 
-// Route 2: Health Check for readiness
+// Route 2: Health Check Endpoint
 app.get('/api/health', (req, res) => {
-	res.status(200).json({ status: 'UP', message: 'API is running smoothly' });
+    res.status(200).json({ status: 'UP', message: 'API is running smoothly' });
 });
 
 // Global Error Handling Middleware
 app.use((err, req, res, next) => {
-	console.error('Error:', err.message);
-	res.status(500).json({
-		error: 'Internal Server Error',
-		message: err.message || 'Something went wrong',
-	});
+    console.error('Error:', err.message || err); // Log full error in console
+    res.status(500).json({
+        success: false,
+        error: 'Internal Server Error',
+        message: err.message || 'Something went wrong',
+    });
 });
 
-// Start the server
+// Start the Server
 app.listen(port, () => {
-	console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on http://localhost:${port}`);
 });
