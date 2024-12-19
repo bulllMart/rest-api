@@ -7,11 +7,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // CORS Middleware
-app.use(cors({
-    origin: '*', // Allow all origins (for development; limit in production)
-    methods: ['GET', 'POST', 'PUT'], // Allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed request headers
-}));
+app.use(cors());
 
 // JSON Parsing Middleware
 app.use(express.json());
