@@ -7,7 +7,11 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 
-app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(cors({
+    origin: '*', // Allows all origins
+    methods: ['GET', 'POST', 'PUT'],
+    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+}));
 app.use(express.json()); // For parsing JSON request bodies
 
 
