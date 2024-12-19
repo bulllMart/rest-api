@@ -1,5 +1,5 @@
 const express = require('express');
-const cors = require('cors');
+
 const NSEArchive = require('./src/archive');
 const NSELive = require('./src/nseLive');
 
