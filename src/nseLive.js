@@ -27,206 +27,125 @@ class NSELive {
 
   async initialize() {
     if (this.initialized) return;
-
     try {
       await this.session.get('https://www.nseindia.com');
       this.initialized = true;
     } catch (error) {
       console.error(`Initialization error: ${error.message}`);
+      throw new Error('Failed to initialize NSE Live session.');
     }
   }
 
-  async get(route, params = {}) {
+  async request(route, params = {}, method = 'get') {
     await this.initialize();
-
     try {
-      const response = await this.session.get(route, { params });
-      return response.data;
+      const response = await this.session[method](route, { params });
+      return response.data || { message: 'No data available.' };
     } catch (error) {
-      console.error(`Error occurred: ${error.message}`);
-      return null;
+      console.error(`Request error: ${error.message}`);
+      throw new Error(error.response?.data?.message || 'Failed to fetch data.');
     }
   }
 
-  async stockQuote(symbol) {
-    return this.get('/quote-equity', { symbol });
+  // Public API Methods
+
+  // Stock-related Methods
+  stockQuote(symbol) {
+    return this.request('/quote-equity', { symbol });
   }
 
-  async stockQuoteFNO(symbol) {
-    return this.get('/quote-derivative', { symbol });
+  stockQuoteFNO(symbol) {
+    return this.request('/quote-derivative', { symbol });
   }
 
-  async tradeInfo(symbol) {
-    return this.get('/quote-equity', { symbol, section: 'trade_info' });
+  tradeInfo(symbol) {
+    return this.request('/quote-equity', { symbol, section: 'trade_info' });
   }
 
-  async marketStatus() {
-    return this.get('/marketStatus');
+  // Market Status
+  marketStatus() {
+    return this.request('/marketStatus');
   }
 
-  async chartData(symbol, indices = false) {
-    const params = { index: symbol + 'EQN' };
-    if (indices) {
-      params.index = symbol;
-      params.indices = 'true';
-    }
-    return this.get('/chart-databyindex', params);
+  // Index Methods
+  allIndices() {
+    return this.request('/allIndices');
   }
 
-  async marketTurnover() {
-    return this.get('/market-turnover');
+  liveIndex(symbol = 'NIFTY 50') {
+    return this.request('/equity-stockIndices', { index: symbol });
   }
 
-  async equityDerivativeTurnover(type = 'allcontracts') {
-    return this.get('/equity-stock', { index: type });
+  indexOptionChain(symbol = 'NIFTY') {
+    return this.request('/option-chain-indices', { symbol });
   }
 
-  async allIndices() {
-    return this.get('/allIndices');
+  // Historical Data
+  historicalDataIndices(from = '01-01-2023', to = '01-01-2024') {
+    return this.request('/historical/indicesHistory', { indexType: 'NIFTY 50', from, to });
   }
 
-  async liveIndex(symbol = 'NIFTY 50') {
-    return this.get('/equity-stockIndices', { index: symbol });
+  historicalDataIndiavix(from = '01-01-2023', to = '01-01-2024') {
+    return this.request('/historical/vixhistory', { from, to });
   }
 
-  async indexOptionChain(symbol = 'NIFTY') {
-    return this.get('/option-chain-indices', { symbol });
+  // Corporate Actions
+  corporateAnnouncements() {
+    return this.request('/home-corporate-announcements', { index: 'homepage' });
   }
 
-  async equitiesOptionChain(symbol) {
-    return this.get('/option-chain-equities', { symbol });
+  corporateActions(index, from_date, to_date) {
+    return this.request('/corporates-corporateActions', { index, from_date, to_date });
   }
 
-  async currencyOptionChain(symbol = 'USDINR') {
-    return this.get('/option-chain-currency', { symbol });
+  // Analysis Methods
+  priceBandHitter() {
+    return this.request('/live-analysis-price-band-hitter');
   }
 
-  async liveFNO() {
-    return this.liveIndex('SECURITIES IN F&O');
+  volumeGainers() {
+    return this.request('/live-analysis-volume-gainers');
   }
 
-  async preOpenMarket(key) {
-    return this.get('/market-data-pre-open', { key });
+  gainersAndLosers() {
+    return this.request('/liveanalysis/gainers/allSec');
   }
 
-  async holidayList() {
-    return this.get('/holiday-master', { type: 'trading' });
-  }
-  async corporateAnnouncements() {
-    //index equities,debt,municipalBond,mf,sme,invitsreits,sse
-    return this.get('/home-corporate-announcements?index=homepage');
-  }
-  async boardMeetings() {
-    return this.get('/home-board-meetings?index=equities');
-  }
-  async corporateActions(index,from_date,to_date) {
-    // return this.get('/home-corporate-actions',{index});
-    return this.get('/corporates-corporateActions',{index,from_date,to_date});
-
-  }
-  async priceBandHitter() {
-    return this.get('/live-analysis-price-band-hitter');
-  }
-  async weekHigh52Stock() {
-   //shows number of highs and lows return this.get('/live-analysis-52weekhighstock');
-    return this.get('/live-analysis-data-52weekhighstock');
-  }
-  async weekLow52Stock() {
-    //shows number of highs and lows return this.get('/live-analysis-52weekhighstock');
-     return this.get('/live-analysis-data-52weeklowstock');
-   }
-  async capitalmarketSnapshot() {
-    return this.get('/snapshot-capital-market-ews');
-  }
-  async allContracts() {
-    return this.get('/equity-stock?index=allcontracts');
-  }
-  async mostActiveSecurities() {
-    //by value and by volume availabe
-    return this.get('/live-analysis-most-active-securities?index=value&limit=10');
-  }
-  async gainersAndLosers() {
-    //gainers and loosers available
-    return this.get('/liveanalysis/gainers/allSec');
-  }
-  async gainersAndLosersTop20(index) {
-    //gainers and loosers available
-    
-    return this.get('/live-analysis-variations',{ index });
-  }
-  async volumeGainers() {
-    return this.get('/live-analysis-volume-gainers');
-  }
-  async top10Loosers() {
-    return this.get('/liveanalysis/loosers/allSec');
-  }
-  async top10Gainers() {
-    return this.get('/liveanalysis/gainers/allSec');
-  }
-  async commodityDerivatives() {
-    //gainers and loosers available
-    return this.get('/commodity-futures');
-  }
-  async currencyDerivatives() {
-    //gainers and loosers available
-    return this.get('/currency-derivatives?index=most_act_cont');
-  }
-  async interestRateDerivatives() {
-    //gainers and loosers available
-    return this.get('/irf-derivatives?index=most_act');
-  }
-  async listEtf() {
-    return this.get('/etf');
-  }
-  async bloakDeals() {
-    return this.get('/bloack-deal');
-  }
-  async largeDeals() {
-    return this.get('/snapshot-capital-market-largedeal');
-  }
-  async optionChainIndices(symbol) {
-    return this.get('/option-chain-indices',{symbol});
-  
-  }
-  async optionChainEquities(symbol) {
-    return this.get('/option-chain-equities',{symbol});
-  }
-   async financialResults() {
-    //equity,sme,debt,insurance availablefor index
-    //quaterly,halfyear,yearly
-    return this.get('/corporates-financial-results?index=equities&period=Quarterly');
+  mostActiveSecurities(limit = 10, type = 'value') {
+    return this.request('/live-analysis-most-active-securities', { index: type, limit });
   }
 
-  async eventCalender() {
-    //equity and sme available
-    return this.get('/event-calendar?');
+  // Turnover Methods
+  marketTurnover() {
+    return this.request('/market-turnover');
   }
-  async annualReports(symbol) {
-    //equity and sme available
-    return this.get('/annual-reports?index=equities',{symbol});
+
+  equityDerivativeTurnover(type = 'allcontracts') {
+    return this.request('/equity-stock', { index: type });
   }
-  async equityMaster() {
-    //list of all indices
-    return this.get('/equity-master');
+
+  // Other Methods
+  holidayList() {
+    return this.request('/holiday-master', { type: 'trading' });
   }
-  async historicalDataIndices() {
-    //list of all indices
-    return this.get('/historical/indicesHistory?indexType=NIFTY%2050&from=19-06-2024&to=26-06-2024');
+
+  capitalmarketSnapshot() {
+    return this.request('/snapshot-capital-market-ews');
   }
-  async historicalDataIndiavix() {
-    //list of all indices
-    return this.get('historical/vixhistory?from=19-06-2024&to=26-06-2024');
+
+  financialResults(period = 'Quarterly') {
+    return this.request('/corporates-financial-results', { index: 'equities', period });
   }
-  async rightsIssue() {
-    //list of all indices
-    return this.get('/liveWatchRights-issues?index=activeIssues');
+
+  // Upcoming Issues
+  ipoAndRightsIssue(category = 'ipo') {
+    return this.request('/all-upcoming-issues', { category });
   }
-  async ipoAndRightsIssue(category) {
-    //list of all indices
-    // {ipo|ofs|rights|tender|ipp|forthcomingIssues}
-    return this.get('/all-upcoming-issues',{category});
+
+  // Rights and Issues
+  rightsIssue() {
+    return this.request('/liveWatchRights-issues', { index: 'activeIssues' });
   }
-  
 }
 
 module.exports = NSELive;
