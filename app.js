@@ -6,33 +6,54 @@ const NSELive = require('./src/nseLive');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// CORS Middleware
+
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+});
 
 
-// JSON Parsing Middleware
 app.use(express.json());
 
-// Instantiate NSELive class
+
 const nseLive = new NSELive();
 
+
+async function checkMarketStatus(req, res, next) {
+    try {
+        const marketStatus = await nseLive.getMarketStatus(); 
+        if (!marketStatus.isOpen) {
+            return res.status(200).json({
+                success: true,
+                message: 'Market is currently closed. Live data is unavailable.',
+            });
+        }
+        next(); 
+    } catch (error) {
+        next(error); 
+    }
+}
+
 // Route 1: Fetch all indices data
-app.get('/api/allIndices', async (req, res, next) => {
+app.get('/api/allIndices', checkMarketStatus, async (req, res, next) => {
     try {
         const data = await nseLive.allIndices();
         res.json({ success: true, data });
     } catch (error) {
-        next(error); // Pass error to global error handler
+        next(error); 
     }
 });
 
-// Route 2: Health Check Endpoint
+
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'UP', message: 'API is running smoothly' });
 });
 
-// Global Error Handling Middleware
+
 app.use((err, req, res, next) => {
-    console.error('Error:', err.message || err); // Log full error in console
+    console.error('Error:', err.message || err); 
     res.status(500).json({
         success: false,
         error: 'Internal Server Error',
@@ -40,7 +61,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start the Server
+
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
