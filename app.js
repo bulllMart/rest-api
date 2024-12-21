@@ -24,24 +24,19 @@ const nseLive = new NSELive();
 async function checkMarketStatus(req, res, next) {
     try {
         const marketStatusData = await nseLive.marketStatus(); 
-        
+
         
         const isMarketOpen = marketStatusData?.marketState?.some(
             state => state.marketStatus.toLowerCase() === 'open'
         );
 
-        if (!isMarketOpen) {
-            return res.status(200).json({
-                success: false,
-                message: 'Market is currently closed. Live data is unavailable.',
-            });
-        }
-
+        req.marketStatus = isMarketOpen ? 'open' : 'closed'; 
         next(); 
     } catch (error) {
         next(error); 
     }
 }
+
 
 
 // Route 1: Fetch all indices data
