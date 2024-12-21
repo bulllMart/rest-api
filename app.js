@@ -23,7 +23,7 @@ const nseLive = new NSELive();
 
 async function checkMarketStatus(req, res, next) {
     try {
-        const marketStatus = await nseLive.getMarketStatus(); 
+        const marketStatus = await nseLive.marketStatus(); 
         if (!marketStatus.isOpen) {
             return res.status(200).json({
                 success: true,
