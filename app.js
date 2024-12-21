@@ -23,18 +23,26 @@ const nseLive = new NSELive();
 
 async function checkMarketStatus(req, res, next) {
     try {
-        const marketStatus = await nseLive.marketStatus(); 
-        if (!marketStatus.isOpen) {
+        const marketStatusData = await nseLive.marketStatus(); // Fetch market status using the NSELive class
+        
+        // Check if any market is open
+        const isMarketOpen = marketStatusData?.marketState?.some(
+            state => state.marketStatus.toLowerCase() === 'open'
+        );
+
+        if (!isMarketOpen) {
             return res.status(200).json({
-                success: true,
+                success: false,
                 message: 'Market is currently closed. Live data is unavailable.',
             });
         }
-        next(); 
+
+        next(); // Proceed to the next middleware or route handler
     } catch (error) {
-        next(error); 
+        next(error); // Pass the error to the global error handler
     }
 }
+
 
 // Route 1: Fetch all indices data
 app.get('/api/allIndices', checkMarketStatus, async (req, res, next) => {
