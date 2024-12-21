@@ -23,9 +23,9 @@ const nseLive = new NSELive();
 
 async function checkMarketStatus(req, res, next) {
     try {
-        const marketStatusData = await nseLive.marketStatus(); // Fetch market status using the NSELive class
+        const marketStatusData = await nseLive.marketStatus(); 
         
-        // Check if any market is open
+        
         const isMarketOpen = marketStatusData?.marketState?.some(
             state => state.marketStatus.toLowerCase() === 'open'
         );
@@ -37,9 +37,9 @@ async function checkMarketStatus(req, res, next) {
             });
         }
 
-        next(); // Proceed to the next middleware or route handler
+        next(); 
     } catch (error) {
-        next(error); // Pass the error to the global error handler
+        next(error); 
     }
 }
 
@@ -47,8 +47,13 @@ async function checkMarketStatus(req, res, next) {
 // Route 1: Fetch all indices data
 app.get('/api/allIndices', checkMarketStatus, async (req, res, next) => {
     try {
-        const data = await nseLive.allIndices();
-        res.json({ success: true, data });
+        const indicesData = await nseLive.allIndices(); 
+
+        res.json({
+            success: true,
+            marketStatus: req.marketStatus, 
+            data: indicesData,
+        });
     } catch (error) {
         next(error); 
     }
